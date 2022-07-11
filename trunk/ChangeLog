@@ -1,0 +1,22 @@
+SVN
+
+    * console interface
+    
+    * rewritten engine
+    
+    * humanizing force falloff at high bpm
+    
+    * XML format for drumkits
+    
+    * unlimited number of velocities layers
+    
+    * low quality mode for realtime composing
+
+20080926
+    
+    * morph between two velocities layers
+    
+    * humanizing time, hit force, morphing
+    
+    * multichannel/mono mode
+

@@ -1,0 +1,183 @@
+#!/usr/bin/python
+import optparse
+import sys
+import time
+import logging
+import threading
+
+import src.csound as csound
+
+Version = "$Version"
+
+class CSDrummerOptions:
+    
+    def __init__(self):
+        
+        self.Script = csound.ScriptOptions()
+        self.Debug = False
+        self.Log = ""
+
+
+class CSDrummerConsole:
+    
+    pollTime = 0.1
+    
+    def __init__(self, options):
+        
+        self.options = options
+       
+    
+    def message(self, str):
+        
+        sys.stdout.write(str)
+        sys.stdout.flush()
+        
+        
+    def run(self):
+        
+        self.message("producing csound script...\n")
+        csd = csound.produceScript(self.options.Script)
+        logging.debug(csd)
+        self.message("running csound...\n")
+        # run csound engine
+        self.engine = csound.CsoundEngine(csd)
+        self.engine.play()
+        status = self.engine.getStatus()
+        while status == 0:
+            status = self.engine.getStatus()
+            curtime = self.engine.getTime()
+            message = "time: %(time).3f\r" % {"time": curtime}
+            self.message(message)
+            time.sleep(self.pollTime)
+        self.engine.stop()
+        status = self.engine.getStatus()
+        message = "\nstatus: %(status)d\n" % {"status": status}
+        self.message(message)
+        
+      
+
+def parseOptions(argv):
+
+        usage = """csdrummer [options] DrumKitFile.xml"""
+        description = """record a drum session in a virtual studio"""
+        version = """csdrummer %s
+http://csdrummer.googlecode.com/
+csdrummer@googlegroups.com
+
+Copyright (C) 2008 Schlagg
+
+csdrummer comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it under certain conditions. Look at LICENSE.txt for details.""" % Version
+
+        # create options
+        options = CSDrummerOptions()
+
+        # create parser
+        parser = optparse.OptionParser(
+            description=description,
+            version=version,
+            usage=usage)
+        
+        # add options
+        parser.add_option(
+            "--human-time", metavar="VALUE", type="float",
+            dest="HumanTime", default=options.Script.HumanTime,
+            help="max value for human time controller (sec), default = %default")
+        parser.add_option(
+            "--human-falloff", metavar="VALUE", type="float",
+            dest="HumanFalloff", default=options.Script.HumanFalloff,
+            help="max value for human falloff controller (sec), default = %default")
+
+        inputModules = csound.inputModules.keys()
+        parser.add_option(
+            "-m", "--input-module", metavar="MODULE", type="choice",
+            dest="InputModule", default=options.Script.InputModule,
+            choices=inputModules,
+            help="MIDI input module: %s" % str(inputModules))
+        outputModules = csound.outputModules.keys()
+        parser.add_option(
+            "-a", "--output-module", metavar="MODULE", type="choice",
+            dest="OutputModule", default=options.Script.OutputModule,
+            choices=outputModules,
+            help="audio output module: %s" % str(outputModules))
+        parser.add_option(
+            "-i", "--input", metavar="INPUT", type="string",
+            dest="Input", default=options.Script.Input,
+            help="input file or device")
+        parser.add_option(
+            "-o", "--output", metavar="OUTPUT", type="string",
+            dest="Output", default=options.Script.Output,
+            help="output file or device")
+        
+        parser.add_option(
+            "--multi", action="store_true",
+            dest="Multichannel", default=options.Script.Multichannel,
+            help="multichannel output")
+        parser.add_option(
+            "--low", action="store_true",
+            dest="LowQuality", default=options.Script.LowQuality,
+            help="low quality")
+        parser.add_option(
+            "--fft", metavar="INT", type="int",
+            dest="FFTSize", default=options.Script.FFTSize,
+            help="FFT window size")
+        
+        parser.add_option(
+            "--csound", metavar="OPTS", type="string",
+            dest="Csound", default=options.Script.Csound,
+            help="custom Csound options")
+        
+        parser.add_option(
+            "-g", "--debug", action="store_true",
+            dest="Debug", default=options.Debug,
+            help="display debug info")
+        parser.add_option(
+            "--log", metavar="FILE", type="string",
+            dest="Log", default=options.Log,
+            help="write log file")            
+
+        # parse args
+        cmdLineOpts, cmdLineArgs = parser.parse_args(argv)
+        if len(cmdLineArgs) != 2:
+            parser.error("incorrect number of arguments")
+       
+        options.Script.HumanFalloff = cmdLineOpts.HumanFalloff
+        options.Script.HumanTime = cmdLineOpts.HumanTime
+
+        options.Script.InputModule = cmdLineOpts.InputModule
+        options.Script.OutputModule = cmdLineOpts.OutputModule
+        options.Script.Input= cmdLineOpts.Input
+        options.Script.Output = cmdLineOpts.Output
+        
+        options.Script.Multichannel = cmdLineOpts.Multichannel
+        options.Script.LowQuality = cmdLineOpts.LowQuality
+        options.Script.FFTSize = cmdLineOpts.FFTSize
+        
+        options.Script.Csound = cmdLineOpts.Csound
+        options.Script.Debug = cmdLineOpts.Debug
+        
+        options.Script.Drumkit = cmdLineArgs[1]
+        
+        options.Debug = cmdLineOpts.Debug
+        options.Log = cmdLineOpts.Log
+        
+        return options
+
+
+def main():
+
+    # parse command line
+    options = parseOptions(sys.argv)
+    # set up logging
+    if options.Debug:
+        loggingLevel = logging.DEBUG
+    else:
+        loggingLevel = logging.INFO
+    logging.basicConfig(format="[%(asctime)s]:%(levelname)s:%(name)s: %(message)s", level=loggingLevel, filename=options.Log)
+    # create interface
+    ifCon = CSDrummerConsole(options)
+    ifCon.run()
+
+
+if __name__ == "__main__":
+    main()
+

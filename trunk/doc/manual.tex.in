@@ -1,0 +1,262 @@
+\input texinfo   @c -*-texinfo-*-
+
+@setfilename csdrummer
+@settitle csdrummer $Version
+
+@titlepage
+@title Title
+@page
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top Top
+@end ifnottex
+
+@menu
+* About csdrummer::
+* Command line::
+* MIDI messages::
+* Drumkit format::
+@end menu
+
+@node About csdrummer
+@chapter About csdrummer
+
+csDrummer allows you to achieve the same result as if you were recording a drum 
+session in a real studio.
+Instruments are triggered by MIDI messages either real-time or from MIDI file.
+Software uses sound morphing for interpolation between layers of an
+sampled instrument.
+This brings a much more realistic effect than just switching between a number
+of separate layers.
+Each hit passes through humanizing filters which alter its force, morphing and time
+offset.
+Theese filters give an effect of a real human playing a drum set.
+
+@heading Features
+@itemize
+@item
+Configurable output channels.
+@item
+Velocities layers morphing technology.
+@item
+Humanizing:
+@itemize
+@item
+    time;
+@item
+    hit force;
+@item
+    morphing;
+@item
+    force falloff at high bpm.
+@end itemize
+@item
+High quality mode for sound rendering.
+@item
+Low quality mode for realtime composing.
+@item
+Single channel mode for realtime composing
+@item
+Drumkits description in XML format.
+@item
+Cross-platform: works anywhere, where Python and Csound works.
+@end itemize
+
+@node Command line
+@chapter Command line
+
+@include help.tex
+
+@node MIDI messages
+@chapter MIDI messages
+
+MIDI channel 10 is used for recieving MIDI messages. 
+Other channels will be ignored.
+
+Supported MIDI messages:
+@itemize
+@item
+Note On
+@item
+Controller Change
+@end itemize
+
+Reaction at NoteOn message depends on used drumkit.
+
+@heading Controllers
+
+@var{HumanForce} humanizes hit force.
+Controller numbers: 20 (coarse) and 52 (fine).
+
+@var{HumanMorph} humanizes morphing.
+Controller numbers: 21 (coarse) and 53 (fine).
+
+@var{HumanFalloff} affects hit force falloff at high bpm.
+Controller numbers: 22 (coarse) and 54 (fine).
+
+@var{HumanTime} humanizes hit time.
+Controller numbers: 23 (coarse) and 55 (fine).
+
+@node Drumkit format
+@chapter Drumkit format
+
+Drumkit structure:
+@itemize
+@item
+Instrument
+@itemize
+@item
+Technique
+@itemize
+@item
+Target
+@itemize
+@item
+Layer
+@item 
+Layer
+@item
+...
+@end itemize
+@item
+Target
+@item 
+..
+@end itemize
+@item
+Technique
+@item 
+...
+@end itemize
+@item
+Instrument
+@item 
+...
+@end itemize
+
+Format:
+@example
+<Drumkit>
+    <Version>@var{version}</Version>
+    <Description>@var{description}</Description>
+    <License>@var{license}</License>
+    <Instrument>...</Instrument>
+    ...
+</Drumkit>
+@end example
+
+Parameters:
+@table @var
+@item version
+Version of drumkit format. Current version is @samp{1}.
+@item description
+Drumkit description.
+@item license
+Drumkit license.
+@end table
+
+@heading Instrument
+
+Instrument represents a collection of mutual-exclusive techniques.
+
+Format:
+@example
+<Instrument Name="@var{name}">
+    <Technique>...</Technique>
+    ...
+</Instrument>
+@end example
+
+Parameters:
+@table @var
+@item name
+Name of instrument.
+@end table
+
+
+@heading Technique
+
+Technique represents the sound of instrument it produces with playing technique.
+
+Format:
+@example
+<Technique Name="@var{name}">
+    <MIDI>@var{midi}</MIDI>
+    <MIDI>...</MIDI>
+    ...
+    <Target>...</Target>
+    ...
+</Technique>
+@end example
+
+Parameters:
+@table @var
+@item name
+Name of technique.
+@item midi
+Assign MIDI note to technique.
+@end table
+
+@heading Target
+
+Target represents the sound of current technique recorded with one microphone.
+
+Format:
+@example
+<Target>
+    <Channel>@var{channel}</Channel>
+    <Gain>@var{gain}</Gain>
+    <ADSR>
+        <Attack>@var{attack}</Attack>
+        <Decay>@var{decay}</Decay>
+        <Sustain>@var{sustain}</Sustain>
+        <Release>@var{release}</Release>
+    </ADSR>
+    <Layer>...</Layer>
+    ...
+</Target>
+@end example
+
+Parameters:
+@table @var
+@item channel
+Name of output channel.
+@item gain
+Audio gain.
+@item attack, decay, sustain, release
+ADSR envelope parameters. 
+Values of @var{attack}, @var{decay} and @var{release} are in seconds. 
+Value of @var{sustain} is in range from zero to one.
+@end table
+
+@heading Layer
+
+Layer represents an endpoint for morphing.
+
+Format:
+@example
+<Layer>
+    <Velocity>@var{velocity}</Velocity>
+    <Gain>@var{gain}</Gain>
+    <Sample>@var{filename}</Sample>
+</Layer>
+@end example
+
+Parameters:
+@table @var
+@item velocity
+MIDI velocity for layer.
+Value is in range from zero to one.
+@item filename
+Source audio file.
+Only first audio channel is used.
+Other channels, if present, are ignored.
+@item gain
+Audio gain.
+@end table
+
+@bye

@@ -1,0 +1,131 @@
+import os
+import string
+
+env = Environment(tools = ["default", "packaging"])
+
+Help("""
+scons [TARGET ...] [VARIABLE=VALUE ...]
+
+Targets:
+    all
+    info
+    html
+    install
+    package
+    
+Variables:
+    version
+    prefix
+    exec_prefix
+    bindir
+    datadir
+    infodir
+""")
+
+# preprocessor builder
+
+ppVariables = {}
+
+def preprocessor(target, source, env):
+    f = open(str(source[0]), "r")
+    text = string.Template(f.read()).safe_substitute(ppVariables)
+    f.close()
+    f = open(str(target[0]), "w")
+    f.write(text)
+    f.close()
+    
+# configure
+
+version = "svn" + os.popen("svnversion").read().split()[0]
+version = ARGUMENTS.get("version", version)
+
+prefix = "/usr/local"
+prefix = ARGUMENTS.get("prefix" , prefix)
+
+exec_prefix = prefix
+exec_prefix = ARGUMENTS.get("exec_prefix", exec_prefix)
+
+bindir = os.path.join(exec_prefix, "bin")
+bindir  = ARGUMENTS.get("bindir", bindir)
+
+datadir = os.path.join(prefix, "share")
+datadir  = os.path.join(ARGUMENTS.get("datadir", datadir), "csdrummer")
+
+infodir = os.path.join(prefix, "info")
+infodir  = ARGUMENTS.get("infodir", infodir)
+
+ppVariables["Version"] = version
+ppVariables["DataDir"] = datadir
+
+# build binaries
+
+env.Command("csdrummer.py", "csdrummer.py.in", [preprocessor, """chmod +x $TARGET"""])
+env.Install(datadir, "csdrummer.py")
+env.Alias("all", "csdrummer.py")
+
+env.Command("csdrummer", "csdrummer.in", [preprocessor, """chmod +x $TARGET"""])
+env.Install(bindir, "csdrummer")
+env.Alias("all", "csdrummer")
+
+# build manual
+
+env.Command("doc/help.out", "csdrummer.py", """python $SOURCE --help > $TARGET"""), 
+env.Command("doc/help.tex", "doc/help.out", """sed -f doc/help.sed $SOURCE > $TARGET""")
+env.Depends("doc/help.tex", "doc/help.sed")
+env.Command("doc/manual.tex", "doc/manual.tex.in", preprocessor)
+env.Depends("doc/manual.tex", "doc/help.tex")
+
+env.Command("doc/csdrummer.info", "doc/manual.tex", """makeinfo -o $TARGET $SOURCE""")
+env.Install(infodir, "doc/csdrummer.info")
+env.Alias("info", "doc/csdrummer.info")
+
+env.Command("doc/csdrummer.html", "doc/manual.tex", """makeinfo --html --no-split --no-headers -o $TARGET $SOURCE""")
+env.Alias("html", "doc/csdrummer.info")
+
+# data
+
+env.Install(os.path.join(datadir, "src"), Split("""
+    src/__init__.py
+    src/drumkit.py
+    src/csound.py
+    src/sampler.csd
+    src/sampler.py
+    src/test.py
+    """))
+
+env.Install(os.path.join(datadir, "example"), Split("""
+    example/example.xml
+    example/example.mid
+    example/kick1.flac
+    example/kick2.flac
+    example/metal1.flac
+    example/metal2.flac
+    example/metalPH.flac
+    """))
+    
+env.Install(os.path.join(datadir), Split("""
+    README
+    LICENSE
+    ChangeLog
+    """))    
+
+# install
+
+env.Alias("install", prefix)
+env.Alias("install", exec_prefix)
+
+# package
+
+env.Package(
+    NAME           = "csdrummer",
+    VERSION        = version,
+    PACKAGEVERSION = 0,
+    LICENSE        = "GPL",
+    SUMMARY        = "record a drum session in a virtual studio",
+    DESCRIPTION    = "",
+    X_RPM_GROUP    = "Other",
+)
+
+# default
+
+Default("all")

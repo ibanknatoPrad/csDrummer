@@ -1,0 +1,32 @@
+#summary Drumset information
+#labels Featured
+
+= Drumset map =
+
+|| *MIDI Note* || *Instrument* ||
+|| 35 || Bass drum ||
+|| 36 || Second bass drum ||
+|| 37 || Side stick ||
+|| 38 || Snare drum ||
+|| 39 || Snare drum rim-shot || 
+|| 40 || Second snare drum ||
+|| 41 || Floor tom ||
+|| 42 || Hi-Hat closed ||
+|| 43 || Floor tom ||
+|| 44 || Hi-Hat Foot ||
+|| 45 || Tom 14" ||
+|| 46 || Hi-Hat open ||
+|| 47 || Tom 13" ||
+|| 48 || Tom 12" ||
+|| 49 || Crash 17" ||
+|| 50 || Tom 10" ||
+|| 51 || Ride ||
+|| 52 || China 16" ||
+|| 53 || Ride Bell ||
+|| 54 || China 18" ||
+|| 55 || Splash 10" ||
+|| 56 || Crash HHX ||
+|| 57 || Crash 18" ||
+|| 58 || Crash Z ||
+|| 59 || Crash Z Tip ||
+|| 60 || Splash ZXT ||

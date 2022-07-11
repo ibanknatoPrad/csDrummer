@@ -1,0 +1,28 @@
+release:
+    v move all difficult for debug back into python
+    v debug mode
+    v humanize through midi ctrls
+    create one working kit
+    v fix \n in csound logger
+    v assert parents for tags in parser
+    v console interface
+    v optimize code: one sample -> one memory table
+    v write tests
+    v extend XML with gain    
+    v make changelog
+    docs
+            
+    
+next:
+    <NoteOn>/<NoteOff> instead <MIDI>
+    <Delay> for <Target>
+    <EmptySample> or <Sample/>
+    GUI
+    GUI Human MIDI Controllers
+    C module for CsoundEngine?
+    Csound script restruct? NO!
+
+    
+    
+
+
